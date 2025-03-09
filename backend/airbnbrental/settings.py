@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     "taggit",
     "userauths",
     "django_ckeditor_5",
+    "rest_framework",
+
 
 ]
 
@@ -48,12 +50,26 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # This is crucial for browsable API
+    ],
+}
+
+CORS_ALLOW_ALL_ORIGINS = True  # Note: Be cautious with this in production!
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",  # my frontend app
+    "http://localhost:5173",  # my backend app
+
+]
+
 ROOT_URLCONF = "airbnbrental.urls"
 
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
