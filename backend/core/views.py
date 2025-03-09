@@ -10,6 +10,29 @@ from django.db.models import Count, Avg
 from userauths.models import User
 from core.models import Property, Booking, PropertyReview, Wishlist, Address
 from core.forms import PropertyReviewForm
+from rest_framework import viewsets
+from .models import (
+    PropertyCategory,
+    Realtor,
+    Property,
+    Booking,
+    PropertyReview,
+    Wishlist,
+    Address,
+    Amenity,
+    PropertyImages,
+)
+from .serializers import (
+    PropertyCategorySerializer,
+    RealtorSerializer,
+    PropertySerializer,
+    BookingSerializer,
+    PropertyReviewSerializer,
+    WishlistSerializer,
+    AddressSerializer,
+    AmenitySerializer,
+    PropertyImagesSerializer,
+)
 
 
 def index(request):
@@ -168,3 +191,52 @@ def privacy_policy(request):
 
 def terms_of_service(request):
     return render(request, "core/terms_of_service.html")
+
+
+#==========ViesSet for Serializers==================
+
+
+
+class PropertyCategoryViewSet(viewsets.ModelViewSet):
+    queryset = PropertyCategory.objects.all()
+    serializer_class = PropertyCategorySerializer
+
+
+class RealtorViewSet(viewsets.ModelViewSet):
+    queryset = Realtor.objects.all()
+    serializer_class = RealtorSerializer
+
+
+class PropertyViewSet(viewsets.ModelViewSet):
+    queryset = Property.objects.all()
+    serializer_class = PropertySerializer
+
+
+class BookingViewSet(viewsets.ModelViewSet):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
+
+
+class PropertyReviewViewSet(viewsets.ModelViewSet):
+    queryset = PropertyReview.objects.all()
+    serializer_class = PropertyReviewSerializer
+
+
+class WishlistViewSet(viewsets.ModelViewSet):
+    queryset = Wishlist.objects.all()
+    serializer_class = WishlistSerializer
+
+
+class AddressViewSet(viewsets.ModelViewSet):
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
+
+
+class AmenityViewSet(viewsets.ModelViewSet):
+    queryset = Amenity.objects.all()
+    serializer_class = AmenitySerializer
+
+
+class PropertyImagesViewSet(viewsets.ModelViewSet):
+    queryset = PropertyImages.objects.all()
+    serializer_class = PropertyImagesSerializer
