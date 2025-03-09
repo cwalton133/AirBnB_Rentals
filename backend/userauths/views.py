@@ -3,7 +3,20 @@ from userauths.forms import UserRegisterForm, ProfileForm
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from django.contrib import messages
 from django.conf import settings
-from userauths.models import Profile, User
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from django.contrib.auth import login, authenticate
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from userauths.serializers import (
+    UserRegisterSerializer,
+    UserLoginSerializer,
+    ProfileSerializer,
+    ContactUsSerializer,
+)
+from userauths.models import Profile, User, ContactUs
 
 
 User = get_user_model()
@@ -83,3 +96,56 @@ def profile_update(request):
     }
 
     return render(request, "userauths/profile-edit.html", context)
+
+
+#========================My Serializers View =======================
+class UserRegisterView(generics.CreateAPIView):
+    serializer_class = UserRegisterSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            'user': self.get_serializer(user).data,
+            'message': 'User registered successfully.'
+        }, status=status.HTTP_201_CREATED)
+
+
+class UserLoginView(APIView):
+    def post(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+
+        # Log the user in
+        login(request, user)
+
+        return Response({"detail": "Logged in successfully."}, status=status.HTTP_200_OK)
+
+
+class ProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return Profile.objects.get(user=self.request.user)
+
+    def put(self, request, *args, **kwargs):
+        profile = self.get_object()
+        serializer = self.get_serializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ContactUsView(generics.CreateAPIView):
+    serializer_class = ContactUsSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        contact_message = serializer.save()
+        return Response({
+            'message': 'Your message has been sent successfully.'
+        }, status=status.HTTP_201_CREATED)
