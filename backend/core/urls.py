@@ -17,13 +17,40 @@ from core.views import (
     privacy_policy,
     terms_of_service,
 )
+from rest_framework.routers import DefaultRouter
+from .views import (
+    PropertyCategoryViewSet,
+    RealtorViewSet,
+    PropertyViewSet,
+    BookingViewSet,
+    PropertyReviewViewSet,
+    WishlistViewSet,
+    AddressViewSet,
+    AmenityViewSet,
+    PropertyImagesViewSet,
+)
+
+
+# Create a router and register our viewsets with it.
+router = DefaultRouter()
+router.register(r'property-categories', PropertyCategoryViewSet)
+router.register(r'realtors', RealtorViewSet)
+router.register(r'properties', PropertyViewSet)
+router.register(r'bookings', BookingViewSet)
+router.register(r'property-reviews', PropertyReviewViewSet)
+router.register(r'wishlists', WishlistViewSet)
+router.register(r'addresses', AddressViewSet)
+router.register(r'amenities', AmenityViewSet)
+router.register(r'property-images', PropertyImagesViewSet)
 
 app_name = "core"
 
 urlpatterns = [
-    # Homepage
-    path("", index, name="index"),
 
+    # Homepage
+# The API URLs are now determined automatically by the router.
+    path('api/', include(router.urls)),
+    path("", index, name="index"),
     # Property URLs
     path("properties/", property_list_view, name="property-list"),
     path("property/<str:pid>/", property_detail_view, name="property-detail"),
