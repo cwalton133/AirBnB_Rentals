@@ -9,10 +9,19 @@ from core.models import (
     Wishlist,
     Address,
 )
+from ckeditor.widgets import CKEditorWidget
+from django import forms
 
 class PropertyImagesAdmin(admin.TabularInline):
     model = PropertyImages
     extra = 1  # To allow adding new images easily
+
+class PropertyAdminForm(forms.ModelForm):
+    description = forms.CharField(widget=CKEditorWidget())
+
+    class Meta:
+        model = Property
+        fields = '__all__'
 
 
 class PropertyAdmin(admin.ModelAdmin):
@@ -21,6 +30,7 @@ class PropertyAdmin(admin.ModelAdmin):
     list_editable = ['price_per_night', 'available']
     search_fields = ['title', 'realtor__username']
     list_filter = ['available', 'location', 'tags']
+    form = PropertyAdminForm
 
 class BookingAdmin(admin.ModelAdmin):
     list_display = ['property', 'user', 'check_in_date', 'check_out_date', 'status']
