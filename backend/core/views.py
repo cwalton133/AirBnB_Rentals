@@ -11,6 +11,7 @@ from userauths.models import User
 from core.models import Property, Booking, PropertyReview, Wishlist, Address
 from core.forms import PropertyReviewForm
 from rest_framework import viewsets
+from rest_framework.response import Response
 from .models import (
     PropertyCategory,
     Realtor,
@@ -33,6 +34,15 @@ from .serializers import (
     AmenitySerializer,
     PropertyImagesSerializer,
 )
+
+from django.template.loader import get_template, TemplateDoesNotExist
+
+def property_list_view(request):
+    try:
+        template = get_template('core/property-list.html')  # Specify your template path
+        return render(request, 'core/property-list.html')  # Render the template
+    except TemplateDoesNotExist:
+        return HttpResponse("Template does not exist.")
 
 
 def index(request):
@@ -196,47 +206,115 @@ def terms_of_service(request):
 #==========ViesSet for Serializers==================
 
 
-
 class PropertyCategoryViewSet(viewsets.ModelViewSet):
     queryset = PropertyCategory.objects.all()
     serializer_class = PropertyCategorySerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Check if there are associated properties
+        if instance.properties.exists():
+            return Response({'error': 'Cannot delete this category because it is associated with properties.'}, status=status.HTTP_400_BAD_REQUEST)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RealtorViewSet(viewsets.ModelViewSet):
     queryset = Realtor.objects.all()
     serializer_class = RealtorSerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Check if there are associated properties
+        if instance.properties.exists():
+            return Response({'error': 'Cannot delete this realtor because they are associated with properties.'}, status=status.HTTP_400_BAD_REQUEST)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Check if there are associated bookings
+        if instance.booking_set.exists():
+            return Response({'error': 'Cannot delete this property because it has associated bookings.'}, status=status.HTTP_400_BAD_REQUEST)
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Optionally check booking status here if needed
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PropertyReviewViewSet(viewsets.ModelViewSet):
     queryset = PropertyReview.objects.all()
     serializer_class = PropertyReviewSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
 
 
 class WishlistViewSet(viewsets.ModelViewSet):
     queryset = Wishlist.objects.all()
     serializer_class = WishlistSerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Optionally check if the address is currently in use
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AmenityViewSet(viewsets.ModelViewSet):
     queryset = Amenity.objects.all()
     serializer_class = AmenitySerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 
 class PropertyImagesViewSet(viewsets.ModelViewSet):
     queryset = PropertyImages.objects.all()
     serializer_class = PropertyImagesSerializer
+
+    def get_serializer_context(self):
+        return {'request': self.request}
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Optionally confirm if the image can be deleted based on other rules
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
