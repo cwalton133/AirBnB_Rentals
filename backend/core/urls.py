@@ -52,7 +52,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path("", index, name="index"),
     # Property URLs
-    path("properties/", property_list_view, name="property-list"),
+    path("property/", property_list_view, name="property-listing"),
     path("property/<str:pid>/", property_detail_view, name="property-detail"),
     path("property/<str:pid>/book/", book_property, name="book-property"),
     path("property/<str:pid>/review/", add_property_review, name="add-property-review"),
