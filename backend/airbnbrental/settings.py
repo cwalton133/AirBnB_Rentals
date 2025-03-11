@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     "userauths",
     "django_ckeditor_5",
     "rest_framework",
-
+    "ckeditor",
 
 ]
 
@@ -159,3 +159,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #PAYPAL_TEST = True
 
 AUTH_USER_MODEL = "userauths.User"
+
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_RESTRICT_BY_USER = True
