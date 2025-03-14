@@ -12,6 +12,7 @@ from core.models import Property, Booking, PropertyReview, Wishlist, Address
 from core.forms import PropertyReviewForm
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from .models import (
     PropertyCategory,
     Realtor,
@@ -241,19 +242,68 @@ class RealtorViewSet(viewsets.ModelViewSet):
 class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
+    permission_classes = [AllowAny]  # Allows public access
 
-    def get_serializer_context(self):
-        return {'request': self.request}
+    def get_queryset(self):
+        queryset = Property.objects.all()
+        location = self.request.query_params.get("location")
+        min_price = self.request.query_params.get("minPrice")
+        max_price = self.request.query_params.get("maxPrice")
+        bedrooms = self.request.query_params.get("bedrooms")
+        amenities = self.request.query_params.get("amenities")
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        # Check if there are associated bookings
-        if instance.booking_set.exists():
-            return Response({'error': 'Cannot delete this property because it has associated bookings.'}, status=status.HTTP_400_BAD_REQUEST)
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if location:
+            queryset = queryset.filter(location__icontains=location)
+        if min_price:
+            queryset = queryset.filter(price__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(price__lte=max_price)
+        if bedrooms:
+            queryset = queryset.filter(bedrooms=bedrooms)
+        if amenities:
+            queryset = queryset.filter(amenities__name__in=amenities.split(","))
+
+        return queryset
 
 
+# class PropertyViewSet(viewsets.ModelViewSet):
+#     queryset = Property.objects.all()
+#     serializer_class = PropertySerializer
+#     permission_classes = [AllowAny]  # Ensures anyone can list properties
+
+#     def get_serializer_context(self):
+#         return {'request': self.request}
+
+#     def list(self, request, *args, **kwargs):
+#         """
+#         Custom listing method to filter properties if needed.
+#         """
+#         queryset = self.queryset
+
+#         # Example filters (extend as needed)
+#         category = request.query_params.get('category')
+#         min_price = request.query_params.get('min_price')
+#         max_price = request.query_params.get('max_price')
+
+#         if category:
+#             queryset = queryset.filter(category__name=category)
+#         if min_price:
+#             queryset = queryset.filter(price__gte=min_price)
+#         if max_price:
+#             queryset = queryset.filter(price__lte=max_price)
+
+#         serializer = self.get_serializer(queryset, many=True)
+#         return Response(serializer.data)
+
+#     def destroy(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         # Check if there are associated bookings
+#         if instance.booking_set.exists():
+#             return Response({'error': 'Cannot delete this property because it has associated bookings.'}, status=status.HTTP_400_BAD_REQUEST)
+#         instance.delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer

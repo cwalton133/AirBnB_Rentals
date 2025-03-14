@@ -1,5 +1,7 @@
 from django import views
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from core.views import (
     index,
     property_list_view,
@@ -77,3 +79,6 @@ urlpatterns = [
     path("privacy-policy/", privacy_policy, name="privacy_policy"),
     path("terms-of-service/", terms_of_service, name="terms_of_service"),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

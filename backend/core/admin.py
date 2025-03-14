@@ -8,6 +8,7 @@ from core.models import (
     PropertyImages,
     Wishlist,
     Address,
+    Realtor,
 )
 from ckeditor.widgets import CKEditorWidget
 from django import forms
@@ -58,6 +59,15 @@ class WishlistAdmin(admin.ModelAdmin):
 class AddressAdmin(admin.ModelAdmin):
     list_display = ['user', 'address_line', 'city', 'state', 'zip_code']
     list_editable = ['address_line', 'city', 'state', 'zip_code']
+    
+class RealtorAdmin(admin.ModelAdmin):
+    list_display = ('rid', 'user',)  
+    search_fields = ('user__username',)  
+    list_filter = ('user__is_active',)   
+    ordering = ('rid',)  
+
+    def __str__(self):
+        return self.user.username
 
 
 # Register models with their corresponding admin classes
@@ -68,3 +78,4 @@ admin.site.register(PropertyReview, PropertyReviewAdmin)
 admin.site.register(Amenity, AmenityAdmin)
 admin.site.register(Wishlist, WishlistAdmin)
 admin.site.register(Address, AddressAdmin)
+admin.site.register(Realtor, RealtorAdmin)
