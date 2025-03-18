@@ -4,16 +4,12 @@ from django.contrib.auth.models import User
 from core.models import Property, Booking, PropertyReview  # UserProfile
 
 class CustomUserCreationForm(UserCreationForm):
-    """ A custom user creation form with additional fields if required. """
-
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
 
 
 class CustomUserChangeForm(UserChangeForm):
-    """ A custom user change form to update user details. """
-
     class Meta:
         model = User
         fields = ['username', 'email']
@@ -71,18 +67,18 @@ class BookingForm(forms.ModelForm):
     class Meta:
         model = Booking
         fields = [
-            'user',               # User making the booking
-            'property',           # Property being booked
-            'check_in_date',      # Check-in date
-            'check_out_date',     # Check-out date
-            'guests',             # Number of guests
-            'total_price',        # Total price for the booking
-            'status',             # Booking status
+            'user',               
+            'property',           
+            'check_in_date',      
+            'check_out_date',     
+            'guests',             
+            'total_price',        
+            'status',             
         ]
         widgets = {
             'check_in_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'check_out_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-            'total_price': forms.NumberInput(attrs={'step': "0.01"}),  # Allow decimal input
+            'total_price': forms.NumberInput(attrs={'step': "0.01"}),  
         }
 
     def clean(self):
@@ -100,7 +96,7 @@ class PropertyReviewForm(forms.ModelForm):
 
     class Meta:
         model = PropertyReview
-        fields = ['property', 'rating', 'comment']  # Adjust fields based on your Review model
+        fields = ['property', 'rating', 'comment']  
         widgets = {
             'comment': forms.Textarea(attrs={'rows': 4, 'cols': 40}),
         }

@@ -24,14 +24,24 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Retrieve token from localStorage
+  const token = localStorage.getItem("authToken");
+
   useEffect(() => {
+    if (!token) {
+      alert("You must log in first!");
+      navigate("/login");
+      return;
+    }
     fetchBookings();
-  }, []);
+  }, [navigate, token]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://127.0.0.1:8000/api/bookings/");
+      const response = await axios.get("http://127.0.0.1:8000/api/bookings/", {
+        headers: { Authorization: `Token ${token}` },
+      });
       setBookings(response.data);
     } catch (err) {
       console.error("Error fetching bookings:", err);
@@ -71,7 +81,10 @@ const Dashboard: React.FC = () => {
                     <strong>Check-in:</strong> {booking.check_in_date} <br />
                     <strong>Check-out:</strong> {booking.check_out_date} <br />
                     <strong>Total Price:</strong> ${booking.total_price} <br />
-                    <strong>Status:</strong> <span className={booking.status === "paid" ? "text-success" : "text-danger"}>{booking.status}</span>
+                    <strong>Status:</strong>{" "}
+                    <span className={booking.status === "paid" ? "text-success" : "text-danger"}>
+                      {booking.status}
+                    </span>
                   </Card.Text>
                   {booking.status !== "paid" && (
                     <Button variant="success" onClick={() => navigate(`/payment/${booking.id}`)}>

@@ -6,13 +6,14 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg
-#import stripe
+import requests
+import stripe
 from userauths.models import User
-from core.models import Property, Booking, PropertyReview, Wishlist, Address
+from core.models import Property, Booking, PropertyReview, Wishlist, Address, Payment
 from core.forms import PropertyReviewForm
 from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import (
     PropertyCategory,
     Realtor,
@@ -23,6 +24,7 @@ from .models import (
     Address,
     Amenity,
     PropertyImages,
+    Payment,
 )
 from .serializers import (
     PropertyCategorySerializer,
@@ -34,20 +36,20 @@ from .serializers import (
     AddressSerializer,
     AmenitySerializer,
     PropertyImagesSerializer,
+    PaymentSerializer,
 )
 
 from django.template.loader import get_template, TemplateDoesNotExist
 
 def property_list_view(request):
     try:
-        template = get_template('core/property-list.html')  # Specify your template path
-        return render(request, 'core/property-list.html')  # Render the template
+        template = get_template('core/property-list.html')  
+        return render(request, 'core/property-list.html')  
     except TemplateDoesNotExist:
         return HttpResponse("Template does not exist.")
 
 
 def index(request):
-    # Fetch featured properties for the homepage
     properties = Property.objects.filter(available=True, featured=True).order_by("-date_added")
     context = {
         "properties": properties
@@ -56,7 +58,6 @@ def index(request):
 
 
 def property_list_view(request):
-    # Show all available properties
     properties = Property.objects.filter(available=True).order_by("-date_added")
     context = {
         "properties": properties,
@@ -95,7 +96,6 @@ def book_property(request, pid):
         check_out_date = request.POST.get("check_out")
         guests = request.POST.get("guests")
 
-        # Create a booking
         booking = Booking.objects.create(
             user=request.user,
             property=property,
@@ -141,14 +141,14 @@ def wishlist_view(request):
     }
     return render(request, "core/wishlist.html", context)
 
-
+@login_required
 def add_to_wishlist(request):
     pid = request.GET['id']
     property = get_object_or_404(Property, pid=pid)
     Wishlist.objects.get_or_create(user=request.user, property=property)
     return JsonResponse({"success": True})
 
-
+@login_required
 def remove_from_wishlist(request):
     pid = request.GET['id']
     wishlist_item = Wishlist.objects.filter(user=request.user, property__pid=pid).first()
@@ -184,10 +184,8 @@ def search_view(request):
     return render(request, "core/search.html", context)
 
 
-# Payment related views not included. You can add that based on the previous logic
-# implicit in your old code
 
-# Other Pages
+# My Other Pages
 def contact(request):
     return render(request, "core/contact.html")
 
@@ -204,19 +202,21 @@ def terms_of_service(request):
     return render(request, "core/terms_of_service.html")
 
 
-#==========ViesSet for Serializers==================
+#==========My ViesSet for Serializers==================
 
 
 class PropertyCategoryViewSet(viewsets.ModelViewSet):
     queryset = PropertyCategory.objects.all()
     serializer_class = PropertyCategorySerializer
+    #permission_classes = [IsAuthenticated] 
+    permission_classes = []
+
 
     def get_serializer_context(self):
         return {'request': self.request}
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        # Check if there are associated properties
         if instance.properties.exists():
             return Response({'error': 'Cannot delete this category because it is associated with properties.'}, status=status.HTTP_400_BAD_REQUEST)
         instance.delete()
@@ -226,13 +226,13 @@ class PropertyCategoryViewSet(viewsets.ModelViewSet):
 class RealtorViewSet(viewsets.ModelViewSet):
     queryset = Realtor.objects.all()
     serializer_class = RealtorSerializer
+    permission_classes = [IsAuthenticated]  
 
     def get_serializer_context(self):
         return {'request': self.request}
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        # Check if there are associated properties
         if instance.properties.exists():
             return Response({'error': 'Cannot delete this realtor because they are associated with properties.'}, status=status.HTTP_400_BAD_REQUEST)
         instance.delete()
@@ -242,7 +242,9 @@ class RealtorViewSet(viewsets.ModelViewSet):
 class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
-    permission_classes = [AllowAny]  # Allows public access
+    #permission_classes = [AllowAny]  
+    permission_classes = [IsAuthenticated]  
+
 
     def get_queryset(self):
         queryset = Property.objects.all()
@@ -266,54 +268,17 @@ class PropertyViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-# class PropertyViewSet(viewsets.ModelViewSet):
-#     queryset = Property.objects.all()
-#     serializer_class = PropertySerializer
-#     permission_classes = [AllowAny]  # Ensures anyone can list properties
-
-#     def get_serializer_context(self):
-#         return {'request': self.request}
-
-#     def list(self, request, *args, **kwargs):
-#         """
-#         Custom listing method to filter properties if needed.
-#         """
-#         queryset = self.queryset
-
-#         # Example filters (extend as needed)
-#         category = request.query_params.get('category')
-#         min_price = request.query_params.get('min_price')
-#         max_price = request.query_params.get('max_price')
-
-#         if category:
-#             queryset = queryset.filter(category__name=category)
-#         if min_price:
-#             queryset = queryset.filter(price__gte=min_price)
-#         if max_price:
-#             queryset = queryset.filter(price__lte=max_price)
-
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response(serializer.data)
-
-#     def destroy(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         # Check if there are associated bookings
-#         if instance.booking_set.exists():
-#             return Response({'error': 'Cannot delete this property because it has associated bookings.'}, status=status.HTTP_400_BAD_REQUEST)
-#         instance.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-    
     
 class BookingViewSet(viewsets.ModelViewSet):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+    permission_classes = [IsAuthenticated]  
 
     def get_serializer_context(self):
         return {'request': self.request}
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        # Optionally check booking status here if needed
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -321,6 +286,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 class PropertyReviewViewSet(viewsets.ModelViewSet):
     queryset = PropertyReview.objects.all()
     serializer_class = PropertyReviewSerializer
+    permission_classes = [IsAuthenticated] 
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -329,6 +295,7 @@ class PropertyReviewViewSet(viewsets.ModelViewSet):
 class WishlistViewSet(viewsets.ModelViewSet):
     queryset = Wishlist.objects.all()
     serializer_class = WishlistSerializer
+    permission_classes = [IsAuthenticated] 
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -337,13 +304,13 @@ class WishlistViewSet(viewsets.ModelViewSet):
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated] 
 
     def get_serializer_context(self):
         return {'request': self.request}
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        # Optionally check if the address is currently in use
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -351,6 +318,7 @@ class AddressViewSet(viewsets.ModelViewSet):
 class AmenityViewSet(viewsets.ModelViewSet):
     queryset = Amenity.objects.all()
     serializer_class = AmenitySerializer
+    permission_classes = [IsAuthenticated] 
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -359,12 +327,213 @@ class AmenityViewSet(viewsets.ModelViewSet):
 class PropertyImagesViewSet(viewsets.ModelViewSet):
     queryset = PropertyImages.objects.all()
     serializer_class = PropertyImagesSerializer
+    permission_classes = [IsAuthenticated] 
 
     def get_serializer_context(self):
         return {'request': self.request}
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        # Optionally confirm if the image can be deleted based on other rules
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    #===============Payment Method Initiate==============
+    
+# class PaymentViewSet(viewsets.ModelViewSet):
+#     queryset = Payment.objects.all()
+#     serializer_class = PaymentSerializer
+#     #permission_classes = [AllowAny]
+#     permission_classes = [IsAuthenticated] 
+    
+# @login_required   
+# def initiate_payment(request, booking_id):
+#     booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+#     payment_method = request.POST.get("payment_method")
+#     amount = booking.property.price
+#     if payment_method == "paypal":
+#                 return initiate_paypal_payment(request, booking, amount)
+#     elif payment_method == "paystack":
+#                 return initiate_paystack_payment(request, booking, amount)
+#     elif payment_method == "credit_card":
+#                 return initiate_stripe_payment(request, booking, amount)
+#     else:
+#                 return JsonResponse({"error": "Invalid payment method selected."}, status=400)
+
+#     def initiate_paypal_payment(request, booking, amount):
+#         PAYPAL_URL = "https://api-m.sandbox.paypal.com/v2/checkout/orders"
+#         headers = {
+#             "Content-Type": "application/json",
+#             "Authorization": f"Bearer {settings.PAYPAL_ACCESS_TOKEN}",
+#         }
+#         data = {
+#             "intent": "CAPTURE",
+#             "purchase_units": [{"amount": {"currency_code": "USD", "value": str(amount)}}],
+#         }
+#         response = requests.post(PAYPAL_URL, json=data, headers=headers)
+#         return JsonResponse(response.json())
+
+#     def initiate_paystack_payment(request, booking, amount):
+#         PAYSTACK_URL = "https://api.paystack.co/transaction/initialize"
+#         headers = {
+#             "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+#             "Content-Type": "application/json",
+#         }
+#         data = {
+#             "email": request.user.email,
+#             "amount": int(amount * 100),
+#             "callback_url": request.build_absolute_uri(reverse("core:verify_paystack_payment")),
+#         }
+#         response = requests.post(PAYSTACK_URL, json=data, headers=headers)
+#         return JsonResponse(response.json())
+
+# def initiate_stripe_payment(request, booking, amount):
+#     stripe.api_key = settings.STRIPE_SECRET_KEY
+#     try:
+#         payment_intent = stripe.PaymentIntent.create(
+#             amount=int(amount * 100),
+#             currency="usd",
+#             payment_method_types=["card"],
+#         )
+#         return JsonResponse({"client_secret": payment_intent["client_secret"]})
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=400)
+
+#     def verify_paystack_payment(request):
+#         transaction_id = request.GET.get("reference")
+#         VERIFY_URL = f"https://api.paystack.co/transaction/verify/{transaction_id}"
+#         headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"}
+#         response = requests.get(VERIFY_URL, headers=headers).json()
+#         if response["status"]:
+#             booking = Booking.objects.get(id=response["data"]["metadata"]["booking_id"])
+#             Payment.objects.create(
+#                 user=booking.user,
+#                 booking=booking,
+#                 amount=booking.property.price,
+#                 payment_method="paystack",
+#                 status="completed",
+#                 transaction_id=transaction_id,
+#             )
+#             messages.success(request, "Payment successful!")
+#             return redirect("core:booking_detail", booking.id)
+#         messages.error(request, "Payment verification failed.")
+#         return redirect("core:user_dashboard")
+
+
+
+# @login_required
+# def process_payment(request, booking_id):
+
+#     booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+
+#     if request.method == "POST":
+#         payment_method = request.POST.get("payment_method")  
+#         amount = booking.property.price * booking.get_total_days()
+
+#         payment = Payment.objects.create(
+#             user=request.user,
+#             booking=booking,
+#             amount=amount,
+#             status="Pending",
+#             payment_method=payment_method
+#         )
+
+#         payment.status = "Completed"
+#         payment.save()
+
+#         messages.success(request, "Payment successful!")
+#         return redirect("core:booking_detail", booking.id)
+
+#     return render(request, "core/payment.html", {"booking": booking})
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=["post"])
+    def initiate_payment(self, request, pk=None):
+        booking = get_object_or_404(Booking, id=pk, user=request.user)
+        payment_method = request.data.get("payment_method")
+        amount = booking.property.price * booking.get_total_days()
+
+        if payment_method == "paypal":
+            return self.initiate_paypal_payment(request, booking, amount)
+        elif payment_method == "paystack":
+            return self.initiate_paystack_payment(request, booking, amount)
+        elif payment_method == "credit_card":
+            return self.initiate_stripe_payment(request, booking, amount)
+        else:
+            return Response({"error": "Invalid payment method selected."}, status=status.HTTP_400_BAD_REQUEST)
+
+    def initiate_paypal_payment(self, request, booking, amount):
+        """Initiates a PayPal payment request."""
+        PAYPAL_URL = "https://api-m.sandbox.paypal.com/v2/checkout/orders"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {settings.PAYPAL_ACCESS_TOKEN}",
+        }
+        data = {
+            "intent": "CAPTURE",
+            "purchase_units": [{"amount": {"currency_code": "USD", "value": str(amount)}}],
+        }
+        response = requests.post(PAYPAL_URL, json=data, headers=headers)
+        
+        if response.status_code == 201:
+            return Response(response.json(), status=status.HTTP_201_CREATED)
+        return Response({"error": "PayPal payment initiation failed"}, status=status.HTTP_400_BAD_REQUEST)
+
+    def initiate_paystack_payment(self, request, booking, amount):
+        """Initiates a Paystack payment request."""
+        PAYSTACK_URL = "https://api.paystack.co/transaction/initialize"
+        headers = {
+            "Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}",
+            "Content-Type": "application/json",
+        }
+        data = {
+            "email": request.user.email,
+            "amount": int(amount * 100),
+            "callback_url": request.build_absolute_uri("/api/payments/verify-paystack/"),
+            "metadata": {"booking_id": booking.id}
+        }
+        response = requests.post(PAYSTACK_URL, json=data, headers=headers)
+        
+        if response.status_code == 200:
+            return Response(response.json(), status=status.HTTP_200_OK)
+        return Response({"error": "Paystack payment initiation failed"}, status=status.HTTP_400_BAD_REQUEST)
+
+    def initiate_stripe_payment(self, request, booking, amount):
+        """Initiates a Stripe credit card payment request."""
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        try:
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(amount * 100),
+                currency="usd",
+                payment_method_types=["card"],
+            )
+            return Response({"client_secret": payment_intent["client_secret"]}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["get"])
+    def verify_paystack_payment(self, request):
+        """Verifies Paystack payment via transaction reference."""
+        transaction_id = request.GET.get("reference")
+        VERIFY_URL = f"https://api.paystack.co/transaction/verify/{transaction_id}"
+        headers = {"Authorization": f"Bearer {settings.PAYSTACK_SECRET_KEY}"}
+        response = requests.get(VERIFY_URL, headers=headers).json()
+
+        if response["status"]:
+            booking_id = response["data"]["metadata"]["booking_id"]
+            booking = get_object_or_404(Booking, id=booking_id)
+            Payment.objects.create(
+                user=booking.user,
+                booking=booking,
+                amount=booking.property.price,
+                payment_method="paystack",
+                status="completed",
+                transaction_id=transaction_id,
+            )
+            return Response({"message": "Payment successful!"}, status=status.HTTP_200_OK)
+
+        return Response({"error": "Payment verification failed."}, status=status.HTTP_400_BAD_REQUEST)

@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db.models.signals import post_save
 
 
-# Define role choices as a class variable in the User model.
+# Choices
 ROLE_CHOICES = (
     ('admin', 'Admin'),
     ('agent', 'Agent'),
@@ -14,21 +14,19 @@ ROLE_CHOICES = (
 )
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True)  # Unique email field
-    username = models.CharField(max_length=100, unique=True)  # Ensure username is unique
-    bio = models.CharField(max_length=100, blank=True)  # Optional biography
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='guest')  # Default role
+    email = models.EmailField(unique=True)  
+    username = models.CharField(max_length=100, unique=True)  
+    bio = models.CharField(max_length=100, blank=True)  
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='guest')  
 
-    # Override the USERNAME_FIELD to use email for authentication
+    # Overriding the USERNAME_FIELD to use email for authentication
     USERNAME_FIELD = "email"
 
-    # Specify required fields when creating a user
     REQUIRED_FIELDS = ['username', 'role']
 
-    # Customizing the groups and permissions fields to avoid reverse accessor clashes
     groups = models.ManyToManyField(
         Group,
-        related_name="userauths_users",  # Unique related name to prevent clashes
+        related_name="userauths_users",  
         blank=True,
         help_text="The groups this user belongs to.",
         related_query_name="userauths_user"
@@ -36,8 +34,7 @@ class User(AbstractUser):
 
     user_permissions = models.ManyToManyField(
         Permission,
-        related_name="userauths_users_permissions",  # Unique related name to prevent clashes
-        blank=True,
+        related_name="userauths_users_permissions",  
         help_text="Specific permissions for this user.",
         related_query_name="userauths_user_permission"
     )
@@ -61,7 +58,7 @@ class Profile(models.Model):
 
 class ContactUs(models.Model):
     full_name = models.CharField(max_length=200)
-    email = models.EmailField(max_length=200)  # Use EmailField for email addresses
+    email = models.EmailField(max_length=200)  
     phone = models.CharField(max_length=200)
     subject = models.CharField(max_length=200)
     message = models.TextField()

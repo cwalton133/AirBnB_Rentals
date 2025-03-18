@@ -1,38 +1,80 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const Register: React.FC = () => {
-  const [name, setName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle Registration Form Submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
-    console.log("Registering:", { name, email, password });
-    navigate("/dashboard"); // Redirect after successful registration
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/register/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: fullName,
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log(data)
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Registration failed");
+      }
+
+      Swal.fire({
+        title: "Success!",
+        text: "Registration successful! Please log in.",
+        icon: "success",
+        confirmButtonText: "OK",
+      }).then(() => navigate("/login"));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="d-flex justify-content-center align-items-center vh-100">
       <div className="card p-4 shadow-lg" style={{ width: "350px" }}>
-        <h3 className="text-center mb-4">Register</h3>
+        <h3 className="text-center mb-3">Register</h3>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Full Name</label>
             <input
               type="text"
               className="form-control"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               required
             />
           </div>
+
           <div className="mb-3">
             <label className="form-label">Email</label>
             <input
@@ -43,6 +85,7 @@ const Register: React.FC = () => {
               required
             />
           </div>
+
           <div className="mb-3">
             <label className="form-label">Password</label>
             <input
@@ -53,6 +96,7 @@ const Register: React.FC = () => {
               required
             />
           </div>
+
           <div className="mb-3">
             <label className="form-label">Confirm Password</label>
             <input
@@ -63,10 +107,12 @@ const Register: React.FC = () => {
               required
             />
           </div>
-          <button type="submit" className="btn btn-primary w-100">
-            Register
+
+          <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
+
         <p className="text-center mt-3">
           Already have an account? <a href="/login">Login</a>
         </p>

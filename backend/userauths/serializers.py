@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from userauths.models import Profile, ContactUs
+from userauths.models import Profile, ContactUs, User
+from django.contrib.auth import authenticate
+
 
 User = get_user_model()
 
@@ -11,7 +13,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         fields = ['email', 'username', 'password', 'role', 'bio']
         extra_kwargs = {
             'password': {'write_only': True},
-            'role': {'default': 'guest'}  # Set default role at the serializer level if needed
+            'role': {'default': 'guest'}  
         }
 
     def create(self, validated_data):
@@ -31,18 +33,37 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
-    def validate(self, attrs):
-        user = authenticate(email=attrs['email'], password=attrs['password'])
+    # def validate(self, attrs):
+    #     user = authenticate(email=attrs['email'], password=attrs['password'])
+    #     if user is None:
+    #         raise serializers.ValidationError("Invalid email or password.")
+    #     return user  
+    
+    def validate(self, data):
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            raise serializers.ValidationError("Email and password are required")
+
+        # Authenticate  with email 
+        user = authenticate(username=email, password=password)
+        
         if user is None:
-            raise serializers.ValidationError("Invalid email or password.")
-        return user  # This would likely need to include more context for JWT or session
+            raise serializers.ValidationError("Invalid credentials, please try again")
+        
+        if not user.is_active:
+            raise serializers.ValidationError("User account is inactive")
+        
+        data["user"] = user
+        return data
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['id', 'full_name', 'bio', 'phone', 'address', 'country', 'verified', 'image']
-        read_only_fields = ['user']  # Prevent modification of the user field through this serializer
+        read_only_fields = ['user']  
 
     def update(self, instance, validated_data):
         instance.full_name = validated_data.get('full_name', instance.full_name)
@@ -65,5 +86,4 @@ class ContactUsSerializer(serializers.ModelSerializer):
         fields = ['full_name', 'email', 'phone', 'subject', 'message']
 
     def create(self, validated_data):
-        # Here you could insert logic for sending emails or notifications based on the contact info.
         return super().create(validated_data)

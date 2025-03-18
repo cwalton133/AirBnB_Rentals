@@ -1,21 +1,25 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, Container } from "react-bootstrap";
+import { useEffect } from "react";
 
-const Logout: React.FC = () => {
-  const navigate = useNavigate();
+const Logout = () => {
+    useEffect(() => {
+        const token = localStorage.getItem("authToken");
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+        fetch("http://127.0.0.1:8000/api/logout/", {
+            method: "POST",
+            headers: {
+                "Authorization": `Token ${token}`,
+                "Content-Type": "application/json",
+            },
+        })
+        .then(() => {
+            localStorage.removeItem("authToken");  // ✅ Remove token
+            alert("Logged out successfully!");
+            window.location.href = "/login";  // Redirect to login
+        })
+        .catch(error => console.error("Logout error:", error));
+    }, []);
 
-  return (
-    <Container className="text-center mt-5">
-      <h2>Logging Out...</h2>
-      <Button variant="danger" onClick={handleLogout}>Logout</Button>
-    </Container>
-  );
+    return <h2>Logging out...</h2>;
 };
 
 export default Logout;

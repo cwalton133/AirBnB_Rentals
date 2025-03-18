@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from userauths.forms import UserRegisterForm, ProfileForm
 from django.contrib.auth import get_user_model, login, authenticate, logout
 from django.contrib import messages
@@ -7,6 +7,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
 from django.contrib.auth import login, authenticate
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -20,6 +21,7 @@ from userauths.models import Profile, User, ContactUs
 
 
 User = get_user_model()
+
 
 def register_view(request):
     if request.method == "POST":
@@ -99,30 +101,57 @@ def profile_update(request):
 
 
 #========================My Serializers View =======================
+# class UserRegisterView(generics.CreateAPIView):
+#     serializer_class = UserRegisterSerializer
+
+#     def create(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         user = serializer.save()
+#         return Response({
+#             'user': self.get_serializer(user).data,
+#             'message': 'User registered successfully.'
+#         }, status=status.HTTP_201_CREATED)
+
+
 class UserRegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()  
     serializer_class = UserRegisterSerializer
+    authentication_classes = []  
+    permission_classes = []       
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response({
-            'user': self.get_serializer(user).data,
-            'message': 'User registered successfully.'
-        }, status=status.HTTP_201_CREATED)
+        serializer.is_valid(raise_exception=True)  
+        user = serializer.save()  
 
+        return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
 
 class UserLoginView(APIView):
     def post(self, request):
         serializer = UserLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.validated_data['user']
+            self._authenticate_user(request, user)
 
-        # Log the user in
+            token, _ = Token.objects.get_or_create(user=user)
+
+            return self._generate_success_response(token, user)
+
+    def _authenticate_user(self, request, user):
         login(request, user)
 
-        return Response({"detail": "Logged in successfully."}, status=status.HTTP_200_OK)
-
+    def _generate_success_response(self, token, user):
+        return Response({
+            "token": token.key,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+            "message": "Login successful"
+        }, status=status.HTTP_200_OK)
+        
 
 class ProfileUpdateView(generics.UpdateAPIView):
     serializer_class = ProfileSerializer
@@ -139,6 +168,32 @@ class ProfileUpdateView(generics.UpdateAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+# class UserLogoutView(APIView):
+#     permission_classes = [IsAuthenticated]  
+
+#     def post(self, request):
+#         try:
+#             request.user.auth_token.delete()
+#         except Exception:
+#             pass  
+        
+#         logout(request)  
+#         return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+    
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            # user's token
+            token = Token.objects.get(user=request.user)
+            token.delete()
+            return Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
+        except Token.DoesNotExist:
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
 class ContactUsView(generics.CreateAPIView):
     serializer_class = ContactUsSerializer
 

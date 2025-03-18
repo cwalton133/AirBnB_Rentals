@@ -30,10 +30,14 @@ from .views import (
     AddressViewSet,
     AmenityViewSet,
     PropertyImagesViewSet,
+    initiate_payment, 
+    process_payment, 
+    PaymentViewSet
+    
 )
 
 
-# Create a router and register our viewsets with it.
+# My router
 router = DefaultRouter()
 router.register(r'property-categories', PropertyCategoryViewSet)
 router.register(r'realtors', RealtorViewSet)
@@ -44,13 +48,15 @@ router.register(r'wishlists', WishlistViewSet)
 router.register(r'addresses', AddressViewSet)
 router.register(r'amenities', AmenityViewSet)
 router.register(r'property-images', PropertyImagesViewSet)
+router.register(r'payments', PaymentViewSet)
+
+
 
 app_name = "core"
 
 urlpatterns = [
 
-    # Homepage
-# The API URLs are now determined automatically by the router.
+# API  Endpoints URLs 
     path('api/', include(router.urls)),
     path("", index, name="index"),
     # Property URLs
@@ -58,6 +64,7 @@ urlpatterns = [
     path("property/<str:pid>/", property_detail_view, name="property-detail"),
     path("property/<str:pid>/book/", book_property, name="book-property"),
     path("property/<str:pid>/review/", add_property_review, name="add-property-review"),
+
 
     # User Dashboard
     path("dashboard/", user_dashboard, name="dashboard"),
@@ -70,8 +77,15 @@ urlpatterns = [
     # Search
     path("search/", search_view, name="search"),
 
-    # Address Management
+    # Address URL
     path("make-default-address/", make_address_default, name="make-default-address"),
+    
+    #Payment URL
+    path("payment/initiate/<int:booking_id>/", initiate_payment, name="initiate-payment"),
+    path("initiate-payment/<int:booking_id>/", initiate_payment, name="initiate_payment"),
+    path("payment/process/<int:payment_id>/", process_payment, name="process-payment"),
+    #path("payment/initiate/<int:booking_id>/", lambda request, booking_id: initiate_payment(request, booking_id), name="initiate-payment"),
+
 
     # Static Pages
     path("contact/", contact, name="contact"),

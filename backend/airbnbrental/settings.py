@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     "userauths",
     "django_ckeditor_5",
     "rest_framework",
-    "ckeditor",
+    "rest_framework.authtoken",
+    "django_summernote",
     "corsheaders",
 
 
@@ -56,14 +57,17 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',  # This is crucial for browsable API
+        'rest_framework.renderers.BrowsableAPIRenderer',  
     ],
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # Note: Be cautious with this in production!
+CORS_ALLOW_ALL_ORIGINS = True  
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",  # my frontend app
-    "http://localhost:5173",  # my backend app
+    "http://localhost:5500",  
+    "http://localhost:5173",  
 
 ]
 
@@ -165,5 +169,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "userauths.User"
 
-CKEDITOR_UPLOAD_PATH = "uploads/"
-CKEDITOR_RESTRICT_BY_USER = True
+# CKEDITOR_UPLOAD_PATH = "uploads/"
+# CKEDITOR_RESTRICT_BY_USER = True
+
+
+SESSION_COOKIE_AGE = 86400  # 1 day
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+

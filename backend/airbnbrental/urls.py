@@ -12,8 +12,7 @@ urlpatterns = [
     path('', include('userauths.urls')),
     #path("useradmin/", include("useradmin.urls")),
 
-    path("ckeditor/", include("ckeditor_uploader.urls")),
-    #path("ckeditor5/", include('django_ckeditor_5.urls')),
+    path('django_summernote/', include('django_summernote.urls')),
 ]
 
 if settings.DEBUG:

@@ -3,25 +3,24 @@ from django.contrib.auth.models import AbstractUser
 from shortuuid.django_fields import ShortUUIDField
 from django.utils.html import mark_safe
 from taggit.managers import TaggableManager
-from django_ckeditor_5.fields import CKEditor5Field
-from django.utils import timezone
 from django.conf import settings
+from django.utils import timezone
+from django_summernote.fields import SummernoteTextField
 
-# Role choices for users
-# ROLE_CHOICES = (
-#     ('admin', 'Admin'),
-#     ('agent', 'Agent'),
-#     ('buyer', 'Buyer'),
-#     ('host', 'Host'),
-#     ('guest', 'Guest'),
-# )
-#
-#
-# class UserProfile(AbstractUser):
-#     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='guest')
-#
-#     def __str__(self):
-#         return self.username
+
+# Payment method choices
+PAYMENT_METHOD_CHOICES = [
+    ("paypal", "PayPal"),
+    ("credit_card", "Credit Card"),
+    ("paystack", "Paystack"),
+]
+
+# Payment status choices
+PAYMENT_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("completed", "Completed"),
+    ("failed", "Failed"),
+]
 
 
 class PropertyCategory(models.Model):
@@ -57,7 +56,7 @@ class Property(models.Model):
 
     title = models.CharField(max_length=100, default="Cozy Home")
     image = models.ImageField(upload_to="properties", default="property.jpg")
-    description = CKEditor5Field(config_name='extends', null=True, blank=True)
+    description = SummernoteTextField(null=True, blank=True)
 
     price_per_night = models.DecimalField(max_digits=12, decimal_places=2, default="0.00")
     max_guests = models.IntegerField(default=1)
@@ -88,15 +87,33 @@ class Booking(models.Model):
     total_price = models.DecimalField(max_digits=12, decimal_places=2, default="0.00")
 
     date_created = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20,
-                              choices=[('pending', 'Pending'), ('confirmed', 'Confirmed'), ('canceled', 'Canceled')],
-                              default='pending')
+    status = models.CharField(
+        max_length=20,
+        choices=[("pending", "Pending"), ("confirmed", "Confirmed"), ("canceled", "Canceled")],
+        default="pending",
+    )
 
     class Meta:
         verbose_name_plural = "Bookings"
 
     def __str__(self):
         return f"Booking {self.id} for {self.property.title}"
+
+
+class Payment(models.Model):
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="payment")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default="paypal")
+    transaction_id = models.CharField(max_length=100, unique=True)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default="pending")
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Payments"
+
+    def __str__(self):
+        return f"Payment {self.transaction_id} - {self.get_status_display()}"
 
 
 class PropertyReview(models.Model):
@@ -139,6 +156,7 @@ class Address(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Address"
 
+
 class Amenity(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(null=True, blank=True)
@@ -146,14 +164,10 @@ class Amenity(models.Model):
     def __str__(self):
         return self.name
 
+
 class PropertyImages(models.Model):
     images = models.ImageField(upload_to="property-images", default="product.jpg")
-    property = models.ForeignKey(
-        'Property',
-        related_name="property_images",
-        on_delete=models.SET_NULL,
-        null=True
-    )
+    property = models.ForeignKey("Property", related_name="property_images", on_delete=models.SET_NULL, null=True)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:

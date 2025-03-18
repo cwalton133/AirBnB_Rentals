@@ -37,19 +37,19 @@ class ProfileForm(forms.ModelForm):
     )
     bio = forms.CharField(
         widget=forms.TextInput(attrs={"placeholder": "Bio", "class": "form-control"}),
-        required=False  # Optional field
+        required=False  
     )
     phone = forms.CharField(
         widget=forms.TextInput(attrs={"placeholder": "Phone", "class": "form-control"}),
-        required=False  # Optional field
+        required=False  
     )
     address = forms.CharField(
         widget=forms.TextInput(attrs={"placeholder": "Address", "class": "form-control"}),
-        required=False  # Optional field
+        required=False  
     )
     country = forms.CharField(
         widget=forms.TextInput(attrs={"placeholder": "Country", "class": "form-control"}),
-        required=False  # Optional field
+        required=False  
     )
 
     class Meta:

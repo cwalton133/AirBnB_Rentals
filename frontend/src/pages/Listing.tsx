@@ -1,18 +1,41 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, Card, Spinner, Alert } from "react-bootstrap";
+import Swal from "sweetalert2";
 
 const Listing: React.FC = () => {
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Function to fetch properties
+  const fetchProperties = async (token: string | null) => {
+    if (!token) {
+      setError("You must log in to view properties.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true); // Set loading to true while fetching data
+
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/properties/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setProperties(response.data);
+      setError(""); // Clear error if data is fetched successfully
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || "Failed to load properties. Please try again later.";
+      setError(errorMessage);
+      Swal.fire("Error", errorMessage, "error"); // Show error notification
+    } finally {
+      setLoading(false); // Always set loading to false at the end
+    }
+  };
+
   useEffect(() => {
-    axios
-      .get("http://127.0.0.1:8000/api/properties/")
-      .then((res) => setProperties(res.data))
-      .catch((err) => setError("Failed to load properties. Please try again later."))
-      .finally(() => setLoading(false));
+    const token = localStorage.getItem("authToken");
+    fetchProperties(token);
   }, []);
 
   return (

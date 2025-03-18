@@ -9,13 +9,14 @@ from .models import (
     Address,
     Amenity,
     PropertyImages,
+    Payment,  
 )
 
 
 class PropertyCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyCategory
-        fields = '__all__'  # or you can specify a list of fields
+        fields = '__all__'
 
 
 class RealtorSerializer(serializers.ModelSerializer):
@@ -31,8 +32,22 @@ class PropertySerializer(serializers.ModelSerializer):
 
 
 class BookingSerializer(serializers.ModelSerializer):
+    payment = serializers.SerializerMethodField()
+
     class Meta:
         model = Booking
+        fields = '__all__'
+
+    def get_payment(self, obj):
+        payment = Payment.objects.filter(booking=obj).first()
+        if payment:
+            return PaymentSerializer(payment).data
+        return None  
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
         fields = '__all__'
 
 
@@ -64,3 +79,8 @@ class PropertyImagesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyImages
         fields = '__all__'
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = "__all__"
