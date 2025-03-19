@@ -31,9 +31,12 @@ from .views import (
     AmenityViewSet,
     PropertyImagesViewSet,
     initiate_payment, 
-    process_payment, 
-    PaymentViewSet
-    
+   # process_payment, 
+    PaymentViewSet,
+    paystack_webhook,
+    PaystackPayment,
+    get_csrf_token,
+
 )
 
 
@@ -64,6 +67,13 @@ urlpatterns = [
     path("property/<str:pid>/", property_detail_view, name="property-detail"),
     path("property/<str:pid>/book/", book_property, name="book-property"),
     path("property/<str:pid>/review/", add_property_review, name="add-property-review"),
+   #Payment URL
+    path("payment/initiate/<int:booking_id>/", initiate_payment, name="initiate-payment"),
+    #path('paystack-webhook/', PaystackWebhook.as_view(), name='paystack-webhook'),
+    path('paystack-webhook/', paystack_webhook, name='paystack-webhook'),
+    path('paystack-payment/', PaystackPayment.as_view(), name='paystack-payment'),
+    path('payments/initiate/<int:id>/', PaystackPayment.as_view(), name='initiate_payment'),
+    path("csrf-token/", get_csrf_token, name="csrf-token"),
 
 
     # User Dashboard
@@ -79,13 +89,6 @@ urlpatterns = [
 
     # Address URL
     path("make-default-address/", make_address_default, name="make-default-address"),
-    
-    #Payment URL
-    path("payment/initiate/<int:booking_id>/", initiate_payment, name="initiate-payment"),
-    path("initiate-payment/<int:booking_id>/", initiate_payment, name="initiate_payment"),
-    path("payment/process/<int:payment_id>/", process_payment, name="process-payment"),
-    #path("payment/initiate/<int:booking_id>/", lambda request, booking_id: initiate_payment(request, booking_id), name="initiate-payment"),
-
 
     # Static Pages
     path("contact/", contact, name="contact"),

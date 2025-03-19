@@ -17,18 +17,22 @@ class PropertyCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyCategory
         fields = '__all__'
+        read_only_fields = ['cid']
 
 
 class RealtorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Realtor
         fields = '__all__'
+        read_only_fields = ['rid', 'user']
 
 
 class PropertySerializer(serializers.ModelSerializer):
     class Meta:
         model = Property
         fields = '__all__'
+        read_only_fields = ['pid', 'realtor', 'price_per_night', 'date_added', 'updated']
+
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -37,6 +41,7 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = '__all__'
+        read_only_fields = ['user', 'check_in_date', 'check_out_date', 'total+price']
 
     def get_payment(self, obj):
         payment = Payment.objects.filter(booking=obj).first()
@@ -44,29 +49,25 @@ class BookingSerializer(serializers.ModelSerializer):
             return PaymentSerializer(payment).data
         return None  
 
-
-class PaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = '__all__'
-
-
 class PropertyReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = PropertyReview
         fields = '__all__'
+        read_only_fields = ['user', 'comment', 'date']
 
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wishlist
         fields = '__all__'
+        read_only_fields = ['user']
 
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = '__all__'
+        read_only_fields = ['user']
 
 
 class AmenitySerializer(serializers.ModelSerializer):
@@ -84,3 +85,4 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = "__all__"
+        read_only_fields = ['amount', 'transaction_id', 'timestamp']

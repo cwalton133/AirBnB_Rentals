@@ -1,8 +1,12 @@
 from pathlib import Path
 import os
 from django.contrib.messages import constants as messages
-
+from dotenv import load_dotenv
 from environs import Env
+
+load_dotenv()  
+
+
 env = Env()
 env.read_env()
 
@@ -31,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_filters",
     "core",
     "taggit",
     "userauths",
@@ -39,7 +44,11 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "django_summernote",
     "corsheaders",
-
+    'drf_yasg',
+    # Default Django apps...
+    "django_extensions", 
+    "paypal.standard",
+    "paystack",
 
 ]
 
@@ -64,12 +73,29 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  
+# Allow only specific frontend origins (Recommended for security)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5500",  
     "http://localhost:5173",  
+     "http://localhost:8000",  
 
 ]
+
+# Enable CORS for specific HTTP methods (optional)
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+
+# Allow frontend to send Authorization headers (for JWT tokens)
+CORS_ALLOW_HEADERS = ["Authorization", "Content-Type"]
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://localhost:5173",  
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "airbnbrental.urls"
 
@@ -160,13 +186,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-#STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
-#STRIPE_PUBLIC_KEY = env("STRIPE_PUBLIC_KEY")
-
-
-#PAYPAL_RECEIVER_EMAIL = 'businessdestiny@gmail.com'
-#PAYPAL_TEST = True
-
 AUTH_USER_MODEL = "userauths.User"
 
 # CKEDITOR_UPLOAD_PATH = "uploads/"
@@ -175,5 +194,30 @@ AUTH_USER_MODEL = "userauths.User"
 
 SESSION_COOKIE_AGE = 86400  # 1 day
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+
+# PayPal Configuration
+PAYPAL_MODE = "sandbox"  
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "admin@airbnbrealty.com")
+PAYPAL_SECRET = os.getenv("PAYPAL_SECRET", "your-paypal-secret")
+PAYPAL_ACCESS_TOKEN = os.getenv("PAYPAL_ACCESS_TOKEN", "your-paypal-access-token")
+
+# Paystack Configuration
+PAYSTACK_PUBLIC_KEY = os.getenv("PAYSTACK_PUBLIC_KEY", "your-paystack-public-key")
+PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY", "your-paystack-secret-key")
+PAYSTACK_BASE_URL = "https://api.paystack.co"
+
+# Stripe Configuration
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY", "your-stripe-public-key")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "your-stripe-secret-key")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "your-stripe-webhook-secret")
+
+
+# Debugging: Print API Keys (Remove in production)
+if os.getenv("DEBUG", "True") == "True":
+    print("🔍 PAYPAL_CLIENT_ID:", PAYPAL_CLIENT_ID)
+    print("🔍 PAYSTACK_SECRET_KEY:", PAYSTACK_SECRET_KEY)
+    print("🔍 STRIPE_SECRET_KEY:", STRIPE_SECRET_KEY)
+
 
 
