@@ -25,7 +25,7 @@ interface Property {
   rating?: number | null;
   amenities: string[];
   is_available: boolean;
-  images: string[]; // Array to store image URLs
+  image: string; 
 }
 
 const Listing: React.FC = () => {
@@ -91,6 +91,8 @@ const Listing: React.FC = () => {
     }
   };
 
+  console.log("Properties: " , properties)
+
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilters((prevFilters) => ({ ...prevFilters, [e.target.name]: e.target.value }));
   };
@@ -147,7 +149,7 @@ const Listing: React.FC = () => {
         {properties.map((property) => (
           <Col key={property.id}>
             <Card className="h-100">
-              <Card.Img variant="top" src={property.images[0]} alt={property.title} />
+              <Card.Img variant="top" src={property.image} alt={property.title} />
               <Card.Body>
                 <Card.Title>{property.title}</Card.Title>
                 <div className="mb-2 text-muted">

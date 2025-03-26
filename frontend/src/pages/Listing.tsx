@@ -9,33 +9,23 @@ const Listing: React.FC = () => {
   const [error, setError] = useState("");
 
   // Function to fetch properties
-  const fetchProperties = async (token: string | null) => {
-    if (!token) {
-      setError("You must log in to view properties.");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true); // Set loading to true while fetching data
-
+  const fetchProperties = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/properties/", {
-        headers: { Authorization: `Token ${token}` },
-      });
+      const response = await axios.get("http://127.0.0.1:8000/api/properties/");
       setProperties(response.data);
       setError(""); // Clear error if data is fetched successfully
-    } catch (err) {
+    } catch (err: any) {
       const errorMessage = err.response?.data?.detail || "Failed to load properties. Please try again later.";
       setError(errorMessage);
-      Swal.fire("Error", errorMessage, "error"); // Show error notification
+      Swal.fire("Error", errorMessage, "error");
     } finally {
-      setLoading(false); // Always set loading to false at the end
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    fetchProperties(token);
+    fetchProperties();
   }, []);
 
   return (

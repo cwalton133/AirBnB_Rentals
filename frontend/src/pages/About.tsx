@@ -3,6 +3,9 @@ import React from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
 
 const About: React.FC = () => {
+
+
+  
   return (
     <Container className="mt-4">
       <h2 className="text-center mb-4">About AirNest Realty</h2>
