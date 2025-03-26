@@ -62,3 +62,4 @@ redis==5.0.1
 shortuuid
 stripe
 django-ckeditor
+gunicorn
