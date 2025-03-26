@@ -5,7 +5,7 @@ from django.utils.html import mark_safe
 from taggit.managers import TaggableManager
 from django.conf import settings
 from django.utils import timezone
-from django_summernote.fields import SummernoteTextField
+from tinymce.models import HTMLField
 
 
 # Payment method choices
@@ -56,7 +56,7 @@ class Property(models.Model):
 
     title = models.CharField(max_length=100, default="Cozy Home")
     image = models.ImageField(upload_to="properties", default="property.jpg")
-    description = SummernoteTextField(null=True, blank=True)
+    description = HTMLField()
 
     price_per_night = models.DecimalField(max_digits=12, decimal_places=2, default="0.00")
     max_guests = models.IntegerField(default=1)

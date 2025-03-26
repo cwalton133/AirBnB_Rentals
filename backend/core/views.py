@@ -255,7 +255,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
     #permission_classes = [AllowAny]  
-    permission_classes = [IsAuthenticated]  
+    #permission_classes = [IsAuthenticated]  
 
 
     def get_queryset(self):
@@ -336,18 +336,24 @@ class AmenityViewSet(viewsets.ModelViewSet):
         return {'request': self.request}
 
 
-class PropertyImagesViewSet(viewsets.ModelViewSet):
+class PropertyImageViewSet(viewsets.ModelViewSet):
     queryset = PropertyImages.objects.all()
     serializer_class = PropertyImagesSerializer
-    permission_classes = [IsAuthenticated] 
+    #permission_classes = [IsAuthenticated] 
 
-    def get_serializer_context(self):
-        return {'request': self.request}
+    # def get_serializer_context(self):
+    #     return {'request': self.request}
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # def destroy(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     instance.delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    def get_queryset(self):
+        property_id = self.request.query_params.get("property")
+        if property_id:
+            return PropertyImages.objects.filter(property_id=property_id)
+        return PropertyImages.objects.all()
     
     #===============Payment Method Initiate==============
 class PaymentViewSet(viewsets.ModelViewSet):

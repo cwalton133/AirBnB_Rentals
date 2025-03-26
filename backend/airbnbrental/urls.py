@@ -28,7 +28,7 @@ urlpatterns = [
     path("", include("core.urls")),
     path('', include('userauths.urls')),
     #path("useradmin/", include("useradmin.urls")),
-    path('django_summernote/', include('django_summernote.urls')),
+    path('tinymce/', include('tinymce.urls')),
     #Drf-Yasg
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

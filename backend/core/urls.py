@@ -29,7 +29,7 @@ from .views import (
     WishlistViewSet,
     AddressViewSet,
     AmenityViewSet,
-    PropertyImagesViewSet,
+    PropertyImageViewSet,
     initiate_payment, 
    # process_payment, 
     PaymentViewSet,
@@ -50,8 +50,8 @@ router.register(r'property-reviews', PropertyReviewViewSet)
 router.register(r'wishlists', WishlistViewSet)
 router.register(r'addresses', AddressViewSet)
 router.register(r'amenities', AmenityViewSet)
-router.register(r'property-images', PropertyImagesViewSet)
 router.register(r'payments', PaymentViewSet)
+router.register(r'property-images', PropertyImageViewSet)
 
 
 

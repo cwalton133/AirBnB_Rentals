@@ -21,9 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-t_mf(p8fu^wl#xsmg@nq)du!i4#ytrrpl=lebs1q3q*dl8vu+o"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -42,10 +42,11 @@ INSTALLED_APPS = [
     "django_ckeditor_5",
     "rest_framework",
     "rest_framework.authtoken",
-    "django_summernote",
+    #"django_summernote",
+    "tinymce",
     "corsheaders",
     'drf_yasg',
-    # Default Django apps...
+    # Default Django apps.
     "django_extensions", 
     "paypal.standard",
     "paystack",
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -218,6 +220,14 @@ if os.getenv("DEBUG", "True") == "True":
     print("🔍 PAYPAL_CLIENT_ID:", PAYPAL_CLIENT_ID)
     print("🔍 PAYSTACK_SECRET_KEY:", PAYSTACK_SECRET_KEY)
     print("🔍 STRIPE_SECRET_KEY:", STRIPE_SECRET_KEY)
+    
+    
+    TINYMCE_DEFAULT_CONFIG = {
+    'height': 500,
+    'width': 800,
+    'toolbar': 'undo redo | bold italic | link image | alignleft aligncenter alignright | bullist numlist outdent indent',
+    'plugins': 'advlist autolink link image lists charmap print preview',
+}
 
 
 

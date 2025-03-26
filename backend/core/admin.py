@@ -3,7 +3,7 @@ from core.models import (
     Property,
     Booking,
     PropertyReview,
-    #UserProfile,
+    PropertyCategory,
     Amenity,
     PropertyImages,
     Wishlist,
@@ -11,20 +11,30 @@ from core.models import (
     Realtor,
     Payment,
 )
-from django_summernote.widgets import SummernoteWidget
+from .forms import PropertyAdminForm  
+from tinymce.models import HTMLField
+from tinymce.widgets import TinyMCE
 from django import forms
 
 class PropertyImagesAdmin(admin.TabularInline):
     model = PropertyImages
     extra = 1  
 
-class PropertyAdminForm(forms.ModelForm):
-    #description = forms.CharField(widget=CKEditorWidget())
-    description = forms.CharField(widget=SummernoteWidget()) 
+class PropertyAdmin(admin.ModelAdmin):
+    form = PropertyAdminForm 
+        
+    
+class PropertyCategoryAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category_image', 'cid')  
+    search_fields = ('title',)  
+    ordering = ('title',)  
+    list_filter = ('title',)  
+  
 
-    class Meta:
-        model = Property
-        fields = '__all__'
+    def category_image(self, obj):
+        return obj.category_image()
+    category_image.short_description = 'Image'
+    category_image.allow_tags = True 
 
 
 class PropertyAdmin(admin.ModelAdmin):
@@ -34,6 +44,10 @@ class PropertyAdmin(admin.ModelAdmin):
     search_fields = ['title', 'realtor__username']
     list_filter = ['available', 'location', 'tags']
     form = PropertyAdminForm
+    
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, change, **kwargs)
+        return form
 
 class BookingAdmin(admin.ModelAdmin):
     list_display = ['property', 'user', 'check_in_date', 'check_out_date', 'status']
@@ -90,7 +104,7 @@ class PaymentAdmin(admin.ModelAdmin):
 admin.site.register(Property, PropertyAdmin)
 admin.site.register(Booking, BookingAdmin)
 admin.site.register(PropertyReview, PropertyReviewAdmin)
-#admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(PropertyCategory, PropertyCategoryAdmin)
 admin.site.register(Amenity, AmenityAdmin)
 admin.site.register(Wishlist, WishlistAdmin)
 admin.site.register(Address, AddressAdmin)

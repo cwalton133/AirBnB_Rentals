@@ -1,7 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
-from core.models import Property, Booking, PropertyReview  # UserProfile
+from core.models import Property, Booking, PropertyReview 
+from tinymce.widgets import TinyMCE
+
 
 class CustomUserCreationForm(UserCreationForm):
     class Meta:
@@ -23,6 +25,31 @@ class CustomUserChangeForm(UserChangeForm):
 #         fields = ['bio', 'phone', 'location']  # Adjust fields based on your UserProfile model
 
 
+# class PropertyForm(forms.ModelForm):
+#     class Meta:
+#         model = Property
+#         fields = [
+#             'realtor',
+#             'category',
+#             'title',
+#             'image',
+#             'description',
+#             'price_per_night',
+#             'max_guests',
+#             'num_bedrooms',
+#             'num_bathrooms',
+#             'location',
+#             'available',
+#             'featured',
+#             'tags'
+#         ]
+#         widgets = {
+#             'tags': forms.CheckboxSelectMultiple()  
+#         }
+
+#     def __init__(self, *args, **kwargs):
+#         super(PropertyForm, self).__init__(*args, **kwargs)
+
 class PropertyForm(forms.ModelForm):
     class Meta:
         model = Property
@@ -42,27 +69,22 @@ class PropertyForm(forms.ModelForm):
             'tags'
         ]
         widgets = {
-            'tags': forms.CheckboxSelectMultiple()  # Customize the widget for tags if needed
+            'description': TinyMCE(),  
+            'tags': forms.CheckboxSelectMultiple()  
         }
 
     def __init__(self, *args, **kwargs):
         super(PropertyForm, self).__init__(*args, **kwargs)
-        # Additional customizations can be added here if required
 
 
-# class BookingForm(forms.ModelForm):
-#     """ A form for creating a booking. """
-#
-#     class Meta:
-#         model = Booking
-#         fields = ['property', 'check_in_date', 'check_out_date', 'guests']
-#         widgets = {
-#             'check_in_date': forms.DateInput(attrs={'type': 'date'}),
-#             'check_out_date': forms.DateInput(attrs={'type': 'date'}),
-#             'guests': forms.NumberInput(attrs={'min': 1}),
-#         }
-
-
+class PropertyAdminForm(forms.ModelForm):
+    class Meta:
+        model = Property
+        fields = '__all__'
+        widgets = {
+            'description': TinyMCE(),  
+        }
+        
 class BookingForm(forms.ModelForm):
     class Meta:
         model = Booking
