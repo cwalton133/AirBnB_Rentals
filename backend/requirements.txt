@@ -43,7 +43,7 @@ shortuuid==1.0.11
 django-mathfilters==1.0.0
 django-admin-sortable2==2.1.10
 stripe==7.0.0
-# psycopg2-binary==2.9.9
+psycopg2-binary==2.9.9
 paypal-payouts-sdk==1.0.0
 paypalhttp==1.0.1
 paypalrestsdk
